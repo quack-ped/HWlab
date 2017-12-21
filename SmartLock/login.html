@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<script src="https://cdn.netpie.io/microgear.js"></script>
+
+<script>
+
+  const APPID = "SmartLock";
+  const KEY = "el917rjQa7CMKHc";
+  const SECRET = "ZXTfXsmDMrRXB9VHMUjE1WeN1";
+
+  const ALIAS = "login";      //  ชื่อตัวเอง
+  const thing1 = "NodeMCU1";  //  ชื่อเพื่อนที่จะคุย
+
+  var microgear = Microgear.create({
+    key: KEY,
+    secret: SECRET,
+    alias : ALIAS
+  });
+
+  microgear.on('present', function(event) {
+    console.log(event);
+  });
+
+  microgear.on('absent', function(event) {
+    console.log(event);
+  });
+
+  microgear.resettoken(function(err) {
+    microgear.connect(APPID);
+  });
+
+</script>
+
+<style>
+
+body{ 
+
+  -webkit-animation: fadein 2.2s; /* Safari, Chrome, Opera */
+}
+@-webkit-keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+button {
+  text-align: center;
+  text-decoration: none;
+  pointer-events: pointer;
+  color: grey;
+  cursor: pointer;
+  height: 30px;
+  width: 75px;
+  margin: 10px;
+  border-radius: 1.5mm;
+  transition: all 0.3s;
+}
+button:hover {
+  -webkit-transform: scale(1.3);
+  transform: scale(1.3);
+}
+
+</style>
+
+<html>
+<title>SmartLock-Login</title>
+
+<body style = "background-image: url(http://www.icanbecreative.com/res/freeweb/2011/04/perspective.png); background-repeat: no-repeat; background-size: 100% 100vh;">
+
+<h2 style="font-size:70px;color:blue;text-align:center; color: white; text-shadow: 2px 2px grey;">SmartLock</h2>
+
+<div id = "slide" style = "background-color: rgba(25,25,25,0.3);">
+
+<h2 style="font-size:40px;text-align:center; color: white; text-shadow: 2px 2px black;">Log in</h2>
+
+<div style="text-align:center; color: white; text-shadow: 1px 1px grey;">
+  <form>
+    Username:<br>
+    <input type="text" id="username"><br><br>
+    Password:<br>
+    <input type="password" maxlength="20" id="password">
+  </form>
+  <br>
+  <button id = "login">Log in ></button>
+  <button id = "signup">Sign up ^</button>
+  <script>
+    document.getElementById("login").onclick = function () {
+      var a1 = document.getElementById("username").value;
+      var a2 = document.getElementById("password").value;
+      if (a1=='' || a2==''){
+        alert("Please fill all the text fields");
+      }else{
+        location.href = "index.html";
+      }
+    };
+    document.getElementById("signup").onclick = function () {
+      location.href = "signup.html"
+    };
+  </script> 
+</div>
+</div>
+
+</body>
+</html>

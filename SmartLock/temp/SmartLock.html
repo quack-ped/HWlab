@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<title>SmartLock</title>
+<head>
+	<style>
+		.background{
+			background-image: url("http://www.icanbecreative.com/res/freeweb/2011/04/perspective.png");
+			background-repeat: no-repeat;
+			background-size: 100% 100vh;
+		}
+		.title_format{
+			font-size: 70px;
+			color: blue;
+			text-align: center;
+			color: white;
+			text-shadow: 2px 2px grey;
+		}
+		.message{
+			color: white;
+			box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+			font-size: 18px;
+			text-align: center;
+		}
+	</style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script>
+		var isWarning;
+		var isUnlocked;
+		var hasSomeoneLeft;
+		var buttonPart = "<img src=\"police.png\" type=\"button\" onclick=\"call_police(true)\" width = 100 height= 40;>\n<img src=\"ignore.png\" type=\"button\" onclick=\"call_police(false)\" width = 100 height= 40;>";
+		var url = "http://127.0.0.1:8080";
+		function action(){
+			$.get(url + "/warning", function(data) {
+				isWarning = data;
+				if(isWarning){ return; }
+				$.get(url + "/door", function(data) {
+					isUnlocked = data;
+				    if(isUnlocked){
+				        document.getElementById('status').src = "lock-icon.png";
+						isUnlocked = false;
+						hasSomeoneLeft = confirm("Is there anyone home?");
+				    }
+				    else{
+						document.getElementById('status').src = "unlock-icon.png";
+				        isUnlocked = true;
+				    }
+					$.get(url + "/unlock", {value: isUnlocked}, (data) =>{});
+					$.get(url + "/room", {value: hasSomeoneLeft}, (data) => {});
+				});
+			});
+		}
+		function modify(x){
+			if(x<10) return '0'+x;
+			return x;
+		}
+		function call_police(call){
+			document.getElementById('intruder').style.visibility = 'hidden';
+			if(call){
+				document.getElementById('asking').innerHTML = "<img src=\"calling.gif\" width = 60 height = 60>";
+				setTimeout(function(){
+					alert("Police was called.");
+					document.getElementById('asking').innerHTML = "";
+				},10000);
+			}
+			else{
+				document.getElementById('asking').innerHTML = "";
+			}
+			$.get(url + "/door", function(data) {
+				isUnlocked = data;
+				if(isUnlocked){
+					document.getElementById('status').src = "unlock-icon.png";
+				}
+				else{
+					document.getElementById('status').src = "lock-icon.png";
+				}
+				isWarning = false;
+				$.get(url + "/intrude",{value: false}, (data) => {});
+			});
+		}
+		function notify(){
+			isWarning = true;
+			var now = new Date();
+			var timeStamp = modify(now.getDate()) + '/' + modify(now.getMonth()) + '/' + now.getFullYear() + '  ' 
+					+ modify(now.getHours()) + ':' + modify(now.getMinutes()) + ':' + modify(now.getSeconds());
+			document.getElementById('status').src = "warning-icon.png";
+			document.getElementById('intruder').style.visibility = "visible";
+			document.getElementById('message').innerHTML = "The intruder was detected at " + timeStamp + ".";
+			document.getElementById('asking').innerHTML = buttonPart;
+		}
+	</script>
+	<script>
+		$.get(url + "/sensor", function(data) {
+			alert(data);
+			if(data) notify();
+		});
+	</script>
+</head>
+
+<body class = "background">
+
+<h2 class="title_format">SmartLock</h2>
+
+<div style=" width: 200px; height: 200px; margin: 0 auto; text-align: left;">
+    <img id = 'status' type = 'button' onclick = "action()" src = "lock-icon.png" width = 200 height = 200>
+	<script>
+		$.get(url + "/door", function(data) {
+			isUnlocked = data;
+			$.get(url + "/warning", function(data) {
+				isWarning = data;
+			});
+			if(isWarning == undefined || isUnlocked == undefined) alert('fck');
+			if(isWarning) document.getElementById('status').src = "warning-icon.png";
+			else{
+				if(isUnlocked) document.getElementById('status').src = "unlock-icon.png";
+				else document.getElementById('status').src = "lock-icon.png";
+			}
+		});
+	</script>
+</div>
+
+<div style="text-align: center;">
+<br>
+<button type="button" onclick="notify()">Intrude</button>
+</div>
+<br>
+<div id = 'intruder' style="text-align: center; visibility: hidden;">
+	<div  style = "width: 400px; margin: 0 auto; text-align: left;">
+		<p id = "message" class = "message"></p>
+	</div>
+</div>
+<div id= "asking" style = "text-align: center;"></div>
+</body>
+</html>

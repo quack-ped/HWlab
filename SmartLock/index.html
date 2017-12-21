@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<title>SmartLock</title>
+<head>
+	<style>
+		.background{
+			background-image: url("http://www.icanbecreative.com/res/freeweb/2011/04/perspective.png");
+			background-repeat: no-repeat;
+			background-size: 100% 100vh;
+		}
+		.title_format{
+			font-size: 70px;
+			color: blue;
+			text-align: center;
+			color: white;
+			text-shadow: 2px 2px grey;
+		}
+		.message{
+			color: white;
+			box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+			font-size: 18px;
+			text-align: center;
+		}
+	</style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script>
+		//var isWarning;
+		//var isUnlocked  = false;
+		//var hasSomeoneLeft;
+		var button_part = '<img src="police.png" type="button" onclick="call_police(true)" width = 100 height= 40;>\n<img src="ignore.png" type="button" onclick="call_police(false)" width = 100 height= 40;>';
+		//var url = "http://127.0.0.1:8080";
+		function action(){
+			$.get('./warning',{t: Date.now()}, function(data){
+				isWarning = data;
+				if(isWarning) return;
+				$.get('./door',{t: Date.now()}, function(data){
+					var isUnlocked = data;
+					var hasSomeoneLeft;
+					if(isUnlocked){
+						document.getElementById('status').src = "lock-icon.png";
+						isUnlocked = false;
+						hasSomeoneLeft = confirm("Nobody home?");
+						if(hasSomeoneLeft == undefined) hasSomeoneLeft = false;
+						$.get("./leave", {value: (hasSomeoneLeft?"true":"false"), t: Date.now()}, (data) => {});
+					}
+					else{
+						document.getElementById('status').src = "unlock-icon.png";
+						isUnlocked = true;
+					}
+					$.get("./unlock", {value: (isUnlocked?"true":"false"), t: Date.now()}, (data) =>{});
+				});
+			});
+		}
+		function notify(time_stamp){
+			$.get('./intrude', {value: "true", t: Date.now()}, (data) => {});
+			document.getElementById('status').src = "warning-icon.png";
+			document.getElementById('intruder').style.visibility = "visible";
+			document.getElementById('message').innerHTML = "The intruder was detected at " + time_stamp + ".";
+			document.getElementById('asking').innerHTML = button_part;
+		}
+		function call_police(call){
+			if(call){
+				document.getElementById('asking').innerHTML = "<img src=\"calling.gif\" width = 60 height = 60>";
+				clearInterval(loop);
+				setTimeout(function(){
+					alert("Police was called.");
+					document.getElementById('asking').innerHTML = "";
+					loop = setInterval(function(){
+						$.get('./warning', {t: Date.now()}, function(data){
+							var isWarning = data;
+							if(isWarning) $.get('./timestamp',{t: Date.now()} ,(data) => {
+								notify(data);
+							});
+						});
+					}, 2000)
+				},10000);
+			} else{
+				document.getElementById('asking').innerHTML = "";
+			}
+			$.get('./intrude', {value: "false", t: Date.now()}, (data) => {});
+			$.get('./warning',{t: Date.now()} , (data) => {
+				isUnlocked = data;
+				if(isUnlocked) document.getElementById('status').src = "unlock-icon.png";
+				else document.getElementById('status').src = "lock-icon.png";
+			})
+		}
+	</script>
+	<script>
+		var loop = setInterval(function(){
+			$.get('./warning', {t: Date.now()}, function(data){
+				var isWarning = data;
+				if(isWarning) $.get('./timestamp',{t: Date.now()} ,(data) => {
+					notify(data);
+				});
+			});
+		}, 2000)
+	</script>
+</head>
+
+<body class = "background">
+
+<h2 class="title_format">SmartLock</h2>
+
+<div style=" width: 200px; height: 200px; margin: 0 auto; text-align: left;">
+    <img id = 'status' type = 'button' onclick = "action()" width = 200 height = 200>
+	<script>
+		$.get('./warning',{t: Date.now()}, function(data){
+			var isWarning = data;
+			if(isWarning){
+				document.getElementById('status').src = "warning-icon.png";
+				document.getElementById('asking').innerHTML = button_part;
+			}
+			else{
+				document.getElementById('asking').innerHTML = "";
+				$.get('./door', {t: Date.now()}, function(data){
+					var isUnlocked = data;
+					if(isUnlocked) document.getElementById('status').src = "unlock-icon.png";
+					else document.getElementById('status').src = "lock-icon.png";
+				});
+			}
+		});
+	</script>
+</div>
+<br>
+<div id = 'intruder' style="text-align: center; visibility: hidden;">
+	<div  style = "width: 400px; margin: 0 auto; text-align: left;">
+		<p id = "message" class = "message"></p>
+	</div>
+</div>
+<div id= "asking" style = "text-align: center;"></div>
+
+</body>
+</html>
